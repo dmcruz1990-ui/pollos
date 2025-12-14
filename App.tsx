@@ -160,30 +160,36 @@ function App() {
 
              {/* Quote / Bulk Section */}
              <section id="cotizar" className="py-16 bg-white">
-               <div className="container mx-auto px-4 text-center max-w-2xl">
-                 <div className="bg-brand-red rounded-2xl p-8 md:p-12 text-white shadow-2xl">
-                    <i className="fas fa-file-invoice-dollar text-5xl mb-6 text-yellow-400"></i>
-                    <h2 className="text-3xl font-bold mb-4">¿Negocio o Restaurante?</h2>
-                    <p className="mb-8 text-lg">
-                      Manejamos precios especiales para mayoristas, restaurantes y asaderos. 
-                      Escríbenos a cualquiera de nuestras líneas.
+               <div className="container mx-auto px-4 text-center max-w-3xl">
+                 <div className="bg-brand-red rounded-3xl p-8 md:p-14 text-white shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
+                    <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
+                    
+                    <i className="fas fa-hand-holding-dollar text-6xl mb-6 text-yellow-400"></i>
+                    <h2 className="text-3xl md:text-4xl font-extrabold mb-4">¿Negocio, Asadero o Evento?</h2>
+                    <p className="mb-8 text-lg md:text-xl opacity-90">
+                      Manejamos precios especiales para mayoristas y restaurantes.
+                      <br/><strong>¡Hablemos directamente y coticemos tu pedido!</strong>
                     </p>
+                    
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                       <a 
-                        href="https://wa.me/573006054141?text=Hola,%20quisiera%20cotizar%20pollos%20al%20por%20mayor."
+                        href="https://wa.me/573006054141?text=Hola%20Granja%20Los%20Pomos,%20me%20gustaría%20cotizar%20pollos%20al%20por%20mayor."
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center bg-white text-brand-red font-bold py-3 px-8 rounded-lg shadow hover:bg-gray-100 transition"
+                        className="flex items-center justify-center bg-white text-brand-red font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-gray-100 transition transform hover:-translate-y-1"
                       >
-                        <i className="fab fa-whatsapp mr-2"></i> 300 605 41 41
+                        <i className="fab fa-whatsapp text-2xl mr-2 text-green-500"></i> 
+                        <span className="text-lg">Cotizar con Diego</span>
                       </a>
                       <a 
-                        href="https://wa.me/573117271846?text=Hola,%20quisiera%20cotizar%20pollos%20al%20por%20mayor."
+                        href="https://wa.me/573117271846?text=Hola%20Granja%20Los%20Pomos,%20me%20gustaría%20cotizar%20pollos%20al%20por%20mayor."
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg shadow hover:bg-white/10 transition"
+                        className="flex items-center justify-center bg-brand-red border-2 border-white text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-white hover:text-brand-red transition transform hover:-translate-y-1"
                       >
-                        <i className="fab fa-whatsapp mr-2"></i> 311 727 18 46
+                        <i className="fab fa-whatsapp text-2xl mr-2"></i> 
+                        <span className="text-lg">Cotizar Línea 2</span>
                       </a>
                     </div>
                  </div>
