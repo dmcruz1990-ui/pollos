@@ -174,13 +174,13 @@ function App() {
                     
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                       <a 
-                        href="https://wa.me/573006054141?text=Hola%20Granja%20Los%20Pomos,%20me%20gustaría%20cotizar%20pollos%20al%20por%20mayor."
+                        href="https://wa.me/573007664729?text=Hola%20Granja%20Los%20Pomos,%20me%20gustaría%20cotizar%20pollos%20al%20por%20mayor."
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center justify-center bg-white text-brand-red font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-gray-100 transition transform hover:-translate-y-1"
                       >
                         <i className="fab fa-whatsapp text-2xl mr-2 text-green-500"></i> 
-                        <span className="text-lg">Cotizar con Diego</span>
+                        <span className="text-lg">Cotizar Línea 1</span>
                       </a>
                       <a 
                         href="https://wa.me/573117271846?text=Hola%20Granja%20Los%20Pomos,%20me%20gustaría%20cotizar%20pollos%20al%20por%20mayor."
@@ -260,7 +260,7 @@ function App() {
       
       {/* Floating WhatsApp Button - Main Number */}
       <a 
-        href="https://wa.me/573006054141" 
+        href="https://wa.me/573007664729" 
         target="_blank" 
         rel="noreferrer"
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-2xl hover:bg-green-600 transition-colors z-40 flex items-center justify-center animate-bounce-slow"

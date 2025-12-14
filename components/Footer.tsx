@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
                <a href="#" className="text-white hover:text-brand-red transition-colors"><i className="fab fa-facebook-f text-2xl"></i></a>
                <a href="#" className="text-white hover:text-brand-red transition-colors"><i className="fab fa-instagram text-2xl"></i></a>
                <div className="flex flex-col gap-1">
-                 <a href="https://wa.me/573006054141" target="_blank" rel="noreferrer" className="text-white hover:text-brand-red transition-colors text-sm"><i className="fab fa-whatsapp"></i> 300 605 41 41</a>
+                 <a href="https://wa.me/573007664729" target="_blank" rel="noreferrer" className="text-white hover:text-brand-red transition-colors text-sm"><i className="fab fa-whatsapp"></i> 300 766 47 29</a>
                  <a href="https://wa.me/573117271846" target="_blank" rel="noreferrer" className="text-white hover:text-brand-red transition-colors text-sm"><i className="fab fa-whatsapp"></i> 311 727 18 46</a>
                </div>
              </div>
@@ -47,9 +47,9 @@ const Footer: React.FC = () => {
                 <span>Medellín, Antioquia<br/>Vereda Los Pomos</span>
               </li>
               <li className="flex flex-col">
-                <a href="https://wa.me/573006054141" target="_blank" rel="noreferrer" className="flex items-center hover:text-white transition group">
+                <a href="https://wa.me/573007664729" target="_blank" rel="noreferrer" className="flex items-center hover:text-white transition group">
                     <i className="fab fa-whatsapp mr-3 text-brand-red group-hover:text-green-500"></i>
-                    <span className="text-lg font-bold">300 605 41 41</span>
+                    <span className="text-lg font-bold">300 766 47 29</span>
                 </a>
                 <a href="https://wa.me/573117271846" target="_blank" rel="noreferrer" className="flex items-center hover:text-white transition mt-1 group">
                     <i className="fab fa-whatsapp mr-3 text-brand-red group-hover:text-green-500"></i>

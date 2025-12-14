@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount, onCartClick, onNavigate }) =
       
       {/* Mobile Sub-header for contact */}
       <div className="bg-brand-red text-white text-xs py-1 text-center md:hidden flex justify-center gap-3">
-        <span><i className="fab fa-whatsapp mr-1"></i> 300 605 41 41</span>
+        <span><i className="fab fa-whatsapp mr-1"></i> 300 766 47 29</span>
         <span className="opacity-50">|</span>
         <span><i className="fab fa-whatsapp mr-1"></i> 311 727 18 46</span>
       </div>
