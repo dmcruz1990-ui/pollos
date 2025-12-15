@@ -19,6 +19,7 @@ const CartModal: React.FC<CartModalProps> = ({
   onClear
 }) => {
   const [step, setStep] = useState<'cart' | 'checkout' | 'success'>('cart');
+  const [orderId, setOrderId] = useState<string>('');
   const [orderDetails, setOrderDetails] = useState<OrderDetails>({
     customerName: '',
     phone: '',
@@ -40,13 +41,54 @@ const CartModal: React.FC<CartModalProps> = ({
     setOrderDetails(prev => ({ ...prev, [name]: value }));
   };
 
+  const generateWhatsAppMessage = (id: string) => {
+    // Lista de productos con saltos de línea estándar
+    const itemsList = cart.map(item => 
+      `▪️ ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-CO')})`
+    ).join('\n');
+
+    const totalFormatted = total.toLocaleString('es-CO');
+    const date = new Date().toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+
+    // Construcción del mensaje limpio usando template strings y saltos de línea \n
+    // encodeURIComponent se encargará de convertir \n en %0A y caracteres especiales
+    return `*🍗 NUEVO PEDIDO - GRANJA LOS POMOS 🍗*\n` +
+           `📅 Fecha: ${date}\n` +
+           `🆔 Orden: #${id}\n\n` +
+           `*👤 DATOS DEL CLIENTE:*\n` +
+           `Nombre: ${orderDetails.customerName}\n` +
+           `Teléfono: ${orderDetails.phone}\n` +
+           `Barrio: ${orderDetails.neighborhood}\n` +
+           `Dirección: ${orderDetails.address}\n` +
+           `Pago: ${orderDetails.paymentMethod.toUpperCase()}\n` +
+           (orderDetails.notes ? `Notas: ${orderDetails.notes}\n` : '') +
+           `\n*🛒 DETALLE DEL PEDIDO:*\n${itemsList}\n\n` +
+           `*💰 TOTAL A PAGAR: $${totalFormatted}*`;
+  };
+
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
+    
+    // Generar un ID de orden aleatorio de 4 dígitos (0000 - 9999)
+    // Usamos Math.random para variar más que Date.now() en pruebas rápidas
+    const newOrderId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    setOrderId(newOrderId);
+
+    const message = generateWhatsAppMessage(newOrderId);
+    const phoneNumber = "573007664729"; 
+    
+    // CRÍTICO: Usar encodeURIComponent asegura que todo el texto, espacios, 
+    // emojis y saltos de línea se pasen correctamente a la URL de WhatsApp.
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // Abrir WhatsApp en una nueva pestaña
+    window.open(whatsappUrl, '_blank');
+
+    setStep('success');
+    // Limpiamos el carrito después de un momento
     setTimeout(() => {
-      setStep('success');
       onClear();
-    }, 1500);
+    }, 500);
   };
 
   if (!isOpen) return null;
@@ -61,7 +103,7 @@ const CartModal: React.FC<CartModalProps> = ({
           {/* Header */}
           <div className="bg-brand-red px-4 py-6 sm:px-6 flex items-center justify-between">
             <h2 className="text-lg font-medium text-white">
-              {step === 'cart' ? 'Tu Canasta' : step === 'checkout' ? 'Finalizar Pedido' : '¡Pedido Recibido!'}
+              {step === 'cart' ? 'Tu Canasta' : step === 'checkout' ? 'Finalizar Pedido' : '¡Pedido Generado!'}
             </h2>
             <button onClick={onClose} className="text-white hover:text-gray-200">
               <i className="fas fa-times text-xl"></i>
@@ -180,6 +222,17 @@ const CartModal: React.FC<CartModalProps> = ({
                         placeholder="Calle 10 # 20-30 Apto 101"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Notas Adicionales (Opcional)</label>
+                      <textarea 
+                        name="notes"
+                        value={orderDetails.notes}
+                        onChange={handleInputChange}
+                        rows={2}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
+                        placeholder="Ej. Dejar en portería, sin timbre..."
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -233,15 +286,17 @@ const CartModal: React.FC<CartModalProps> = ({
             {/* Step 3: Success */}
             {step === 'success' && (
               <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                  <i className="fas fa-check text-4xl text-green-600"></i>
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                  <i className="fab fa-whatsapp text-5xl text-green-600"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Pedido Realizado!</h3>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Casi listo!</h3>
                 <p className="text-gray-600 mb-6">
-                  Hemos recibido tu pedido correctamente. Nos pondremos en contacto contigo al <strong>{orderDetails.phone}</strong> para confirmar el despacho.
+                  Hemos generado tu orden <strong>#{orderId}</strong>. <br/>
+                  Se ha abierto WhatsApp automáticamente. Por favor <strong>envía el mensaje</strong> para que nuestro asesor confirme tu despacho.
                 </p>
-                <div className="bg-white p-4 rounded border w-full text-left mb-6 text-sm">
-                  <p><strong>Orden:</strong> #LP-{Math.floor(Math.random() * 10000)}</p>
+                <div className="bg-white p-4 rounded border w-full text-left mb-6 text-sm shadow-inner">
+                  <p className="text-center text-gray-500 italic mb-2">Resumen enviado a WhatsApp:</p>
+                  <p><strong>Cliente:</strong> {orderDetails.customerName}</p>
                   <p><strong>Total:</strong> ${total.toLocaleString('es-CO')}</p>
                   <p><strong>Pago:</strong> {orderDetails.paymentMethod.toUpperCase()}</p>
                 </div>
@@ -249,7 +304,7 @@ const CartModal: React.FC<CartModalProps> = ({
                   onClick={() => { setStep('cart'); onClose(); }}
                   className="bg-brand-red text-white font-bold py-3 px-8 rounded-lg w-full"
                 >
-                  Seguir Comprando
+                  Entendido, volver al inicio
                 </button>
               </div>
             )}
@@ -281,9 +336,9 @@ const CartModal: React.FC<CartModalProps> = ({
                   <button
                     type="submit"
                     form="checkout-form"
-                    className="flex-1 items-center justify-center rounded-md border border-transparent bg-brand-red px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-800"
+                    className="flex-1 items-center justify-center rounded-md border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700"
                   >
-                    Confirmar Pedido
+                    <i className="fab fa-whatsapp mr-2"></i> Confirmar Pedido
                   </button>
                 </div>
               )}
