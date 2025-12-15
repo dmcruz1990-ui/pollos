@@ -64,6 +64,9 @@ function App() {
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  // Filter products for homepage (e.g., show middle range: 6, 7, 8 lbs)
+  const featuredProducts = PRODUCTS.filter(p => p.id >= 6 && p.id <= 8);
+
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Header 
@@ -81,14 +84,14 @@ function App() {
             <section className="py-16 bg-white">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Nuestro Producto Estrella</h2>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Nuestros Productos Estrella</h2>
                   <div className="w-20 h-1 bg-brand-red mx-auto"></div>
                   <p className="mt-4 text-gray-600">Calidad garantizada, del campo a tu mesa.</p>
                 </div>
-                {/* Centered layout for single product */}
+                {/* Centered layout for products */}
                 <div className="flex flex-wrap justify-center gap-8">
-                  {PRODUCTS.map(product => (
-                    <div key={product.id} className="w-full max-w-md transform hover:-translate-y-2 transition-transform duration-300">
+                  {featuredProducts.map(product => (
+                    <div key={product.id} className="w-full max-w-sm transform hover:-translate-y-2 transition-transform duration-300">
                       <ProductCard product={product} onAdd={addToCart} />
                     </div>
                   ))}
@@ -98,7 +101,7 @@ function App() {
                     onClick={() => setView('products')}
                     className="inline-block border-2 border-brand-red text-brand-red font-bold py-3 px-8 rounded-full hover:bg-brand-red hover:text-white transition-colors"
                    >
-                     Ver Detalles y Comprar
+                     Ver Todos los Tamaños
                    </button>
                 </div>
               </div>
@@ -209,10 +212,10 @@ function App() {
                   </div>
                 </div>
                 
-                {/* Product Grid (Centered for single item) */}
+                {/* Product Grid (All products) */}
                 <div className="flex flex-wrap justify-center gap-6">
                   {PRODUCTS.map(product => (
-                    <div key={product.id} className="w-full max-w-lg">
+                    <div key={product.id} className="w-full max-w-sm">
                       <ProductCard product={product} onAdd={addToCart} />
                     </div>
                   ))}
