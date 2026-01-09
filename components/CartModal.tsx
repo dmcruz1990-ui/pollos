@@ -29,6 +29,8 @@ const CartModal: React.FC<CartModalProps> = ({
     notes: ''
   });
 
+  const NEQUI_NUMBER = "300 766 47 29"; // Número de Nequi de la empresa
+
   // Calculate total
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -42,7 +44,6 @@ const CartModal: React.FC<CartModalProps> = ({
   };
 
   const generateWhatsAppMessage = (id: string) => {
-    // Lista de productos con saltos de línea estándar
     const itemsList = cart.map(item => 
       `▪️ ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-CO')})`
     ).join('\n');
@@ -50,8 +51,11 @@ const CartModal: React.FC<CartModalProps> = ({
     const totalFormatted = total.toLocaleString('es-CO');
     const date = new Date().toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
 
-    // Construcción del mensaje limpio usando template strings y saltos de línea \n
-    // encodeURIComponent se encargará de convertir \n en %0A y caracteres especiales
+    // Nota especial si es Nequi
+    const paymentNote = orderDetails.paymentMethod === 'nequi' 
+      ? `\n⚠️ *NOTA:* Adjuntaré el comprobante de pago de Nequi a este chat.` 
+      : '';
+
     return `*🍗 NUEVO PEDIDO - GRANJA LOS POMOS 🍗*\n` +
            `📅 Fecha: ${date}\n` +
            `🆔 Orden: #${id}\n\n` +
@@ -62,6 +66,7 @@ const CartModal: React.FC<CartModalProps> = ({
            `Dirección: ${orderDetails.address}\n` +
            `Pago: ${orderDetails.paymentMethod.toUpperCase()}\n` +
            (orderDetails.notes ? `Notas: ${orderDetails.notes}\n` : '') +
+           paymentNote +
            `\n*🛒 DETALLE DEL PEDIDO:*\n${itemsList}\n\n` +
            `*💰 TOTAL A PAGAR: $${totalFormatted}*`;
   };
@@ -69,23 +74,19 @@ const CartModal: React.FC<CartModalProps> = ({
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Generar un ID de orden aleatorio de 4 dígitos (0000 - 9999)
-    // Usamos Math.random para variar más que Date.now() en pruebas rápidas
     const newOrderId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     setOrderId(newOrderId);
 
     const message = generateWhatsAppMessage(newOrderId);
     const phoneNumber = "573007664729"; 
     
-    // CRÍTICO: Usar encodeURIComponent asegura que todo el texto, espacios, 
-    // emojis y saltos de línea se pasen correctamente a la URL de WhatsApp.
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
-    // Abrir WhatsApp en una nueva pestaña
+    // Abrir WhatsApp
     window.open(whatsappUrl, '_blank');
 
     setStep('success');
-    // Limpiamos el carrito después de un momento
+    // Limpiamos el carrito
     setTimeout(() => {
       onClear();
     }, 500);
@@ -252,7 +253,7 @@ const CartModal: React.FC<CartModalProps> = ({
                         <i className="fas fa-money-bill-wave text-green-600 mr-2"></i> Efectivo contra entrega
                       </span>
                     </label>
-                    <label className="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                    <label className="flex items-center space-x-3 p-2 border rounded border-brand-red/30 cursor-pointer hover:bg-brand-red/5">
                       <input 
                         type="radio" 
                         name="paymentMethod" 
@@ -261,8 +262,12 @@ const CartModal: React.FC<CartModalProps> = ({
                         onChange={handleInputChange}
                         className="h-4 w-4 text-brand-red focus:ring-brand-red" 
                       />
-                      <span className="flex-1 flex items-center">
-                        <span className="font-bold text-purple-800 mr-2">Nequi</span> / Daviplata
+                      <span className="flex-1 flex flex-col">
+                        <span className="font-bold text-purple-800 flex items-center">
+                          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Logo_Nequi.svg/1200px-Logo_Nequi.svg.png" className="h-4 mr-2" alt="Nequi" />
+                          Nequi / Daviplata
+                        </span>
+                        <span className="text-xs text-gray-500">Paga ahora y adjunta el comprobante</span>
                       </span>
                     </label>
                     <label className="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
@@ -292,14 +297,33 @@ const CartModal: React.FC<CartModalProps> = ({
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Casi listo!</h3>
                 <p className="text-gray-600 mb-6">
                   Hemos generado tu orden <strong>#{orderId}</strong>. <br/>
-                  Se ha abierto WhatsApp automáticamente. Por favor <strong>envía el mensaje</strong> para que nuestro asesor confirme tu despacho.
+                  Se ha abierto WhatsApp automáticamente.
                 </p>
+
+                {/* Bloque especial para Nequi */}
+                {orderDetails.paymentMethod === 'nequi' && (
+                  <div className="bg-purple-50 border-2 border-purple-200 p-4 rounded-xl mb-6 w-full text-left">
+                    <h4 className="text-purple-900 font-bold flex items-center mb-2">
+                      <i className="fas fa-info-circle mr-2"></i> Instrucciones Nequi:
+                    </h4>
+                    <p className="text-sm text-purple-800 mb-3">
+                      1. Realiza el pago de <strong>${total.toLocaleString('es-CO')}</strong> al número:<br/>
+                      <span className="text-lg font-black block mt-1">{NEQUI_NUMBER}</span>
+                    </p>
+                    <p className="text-xs text-purple-700 font-medium">
+                      2. Toma un pantallazo del comprobante.<br/>
+                      3. <strong>Envíalo al chat de WhatsApp</strong> que acabamos de abrir.
+                    </p>
+                  </div>
+                )}
+
                 <div className="bg-white p-4 rounded border w-full text-left mb-6 text-sm shadow-inner">
-                  <p className="text-center text-gray-500 italic mb-2">Resumen enviado a WhatsApp:</p>
+                  <p className="text-center text-gray-500 italic mb-2">Resumen enviado:</p>
                   <p><strong>Cliente:</strong> {orderDetails.customerName}</p>
                   <p><strong>Total:</strong> ${total.toLocaleString('es-CO')}</p>
                   <p><strong>Pago:</strong> {orderDetails.paymentMethod.toUpperCase()}</p>
                 </div>
+                
                 <button 
                   onClick={() => { setStep('cart'); onClose(); }}
                   className="bg-brand-red text-white font-bold py-3 px-8 rounded-lg w-full"
@@ -342,14 +366,6 @@ const CartModal: React.FC<CartModalProps> = ({
                   </button>
                 </div>
               )}
-              <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-                <p>
-                  o{' '}
-                  <button onClick={onClose} className="font-medium text-brand-red hover:text-red-500">
-                    Continuar Comprando <span aria-hidden="true"> &rarr;</span>
-                  </button>
-                </p>
-              </div>
             </div>
           )}
         </div>
