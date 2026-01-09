@@ -20,6 +20,7 @@ const CartModal: React.FC<CartModalProps> = ({
 }) => {
   const [step, setStep] = useState<'cart' | 'checkout' | 'success'>('cart');
   const [orderId, setOrderId] = useState<string>('');
+  const [finalTotal, setFinalTotal] = useState<number>(0);
   const [orderDetails, setOrderDetails] = useState<OrderDetails>({
     customerName: '',
     phone: '',
@@ -31,8 +32,8 @@ const CartModal: React.FC<CartModalProps> = ({
 
   const NEQUI_NUMBER = "300 766 47 29"; // Número de Nequi de la empresa
 
-  // Calculate total
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Calculate current total from cart
+  const currentTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   useEffect(() => {
     if (isOpen) setStep('cart');
@@ -43,15 +44,14 @@ const CartModal: React.FC<CartModalProps> = ({
     setOrderDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const generateWhatsAppMessage = (id: string) => {
+  const generateWhatsAppMessage = (id: string, totalVal: number) => {
     const itemsList = cart.map(item => 
       `▪️ ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-CO')})`
     ).join('\n');
 
-    const totalFormatted = total.toLocaleString('es-CO');
+    const totalFormatted = totalVal.toLocaleString('es-CO');
     const date = new Date().toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
 
-    // Nota especial si es Nequi
     const paymentNote = orderDetails.paymentMethod === 'nequi' 
       ? `\n⚠️ *NOTA:* Adjuntaré el comprobante de pago de Nequi a este chat.` 
       : '';
@@ -74,22 +74,26 @@ const CartModal: React.FC<CartModalProps> = ({
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Guardamos el total actual antes de que el carrito se limpie
+    const totalToPay = currentTotal;
+    setFinalTotal(totalToPay);
+
     const newOrderId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     setOrderId(newOrderId);
 
-    const message = generateWhatsAppMessage(newOrderId);
+    const message = generateWhatsAppMessage(newOrderId, totalToPay);
     const phoneNumber = "573007664729"; 
     
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
-    // Abrir WhatsApp
     window.open(whatsappUrl, '_blank');
 
     setStep('success');
-    // Limpiamos el carrito
+    
+    // Limpiamos el carrito después de guardar el total final
     setTimeout(() => {
       onClear();
-    }, 500);
+    }, 100);
   };
 
   if (!isOpen) return null;
@@ -101,20 +105,16 @@ const CartModal: React.FC<CartModalProps> = ({
       <div className="absolute inset-y-0 right-0 max-w-full flex">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full animate-slide-in-right">
           
-          {/* Header */}
-          <div className="bg-brand-red px-4 py-6 sm:px-6 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-white">
+          <div className="bg-brand-red px-4 py-6 sm:px-6 flex items-center justify-between text-white">
+            <h2 className="text-lg font-medium">
               {step === 'cart' ? 'Tu Canasta' : step === 'checkout' ? 'Finalizar Pedido' : '¡Pedido Generado!'}
             </h2>
-            <button onClick={onClose} className="text-white hover:text-gray-200">
+            <button onClick={onClose} className="hover:text-gray-200">
               <i className="fas fa-times text-xl"></i>
             </button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-stone-50">
-            
-            {/* Step 1: Cart View */}
             {step === 'cart' && (
               <>
                 {cart.length === 0 ? (
@@ -130,36 +130,20 @@ const CartModal: React.FC<CartModalProps> = ({
                     {cart.map((item) => (
                       <li key={item.id} className="flex py-4 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                         <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                          <img src={item.image} alt={item.name} className="h-full w-full object-cover object-center" />
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                         </div>
                         <div className="ml-4 flex flex-1 flex-col">
-                          <div>
-                            <div className="flex justify-between text-base font-medium text-gray-900">
-                              <h3>{item.name}</h3>
-                              <p className="ml-4">${(item.price * item.quantity).toLocaleString('es-CO')}</p>
-                            </div>
-                            <p className="mt-1 text-sm text-gray-500">{item.unit}</p>
+                          <div className="flex justify-between text-base font-medium text-gray-900">
+                            <h3>{item.name}</h3>
+                            <p className="ml-4">${(item.price * item.quantity).toLocaleString('es-CO')}</p>
                           </div>
                           <div className="flex flex-1 items-end justify-between text-sm">
                             <div className="flex items-center border rounded-md">
-                              <button 
-                                onClick={() => onUpdateQuantity(item.id, -1)}
-                                className="px-2 py-1 hover:bg-gray-100"
-                                disabled={item.quantity <= 1}
-                              >-</button>
+                              <button onClick={() => onUpdateQuantity(item.id, -1)} className="px-2 py-1 hover:bg-gray-100" disabled={item.quantity <= 1}>-</button>
                               <span className="px-2 font-bold">{item.quantity}</span>
-                              <button 
-                                onClick={() => onUpdateQuantity(item.id, 1)}
-                                className="px-2 py-1 hover:bg-gray-100"
-                              >+</button>
+                              <button onClick={() => onUpdateQuantity(item.id, 1)} className="px-2 py-1 hover:bg-gray-100">+</button>
                             </div>
-                            <button 
-                              type="button" 
-                              onClick={() => onRemove(item.id)}
-                              className="font-medium text-brand-red hover:text-red-800"
-                            >
-                              Eliminar
-                            </button>
+                            <button onClick={() => onRemove(item.id)} className="font-medium text-brand-red">Eliminar</button>
                           </div>
                         </div>
                       </li>
@@ -169,164 +153,79 @@ const CartModal: React.FC<CartModalProps> = ({
               </>
             )}
 
-            {/* Step 2: Checkout Form */}
             {step === 'checkout' && (
               <form id="checkout-form" onSubmit={handleSubmitOrder} className="space-y-4">
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Datos de Entrega</h3>
                   <div className="grid grid-cols-1 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                      <input 
-                        required 
-                        type="text" 
-                        name="customerName"
-                        value={orderDetails.customerName}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
-                        placeholder="Juan Pérez"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Teléfono / WhatsApp</label>
-                      <input 
-                        required 
-                        type="tel" 
-                        name="phone"
-                        value={orderDetails.phone}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
-                        placeholder="300 123 4567"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Barrio (Medellín)</label>
-                      <input 
-                        required 
-                        type="text" 
-                        name="neighborhood"
-                        value={orderDetails.neighborhood}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
-                        placeholder="Ej. Belén, Poblado, Laureles"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Dirección Exacta</label>
-                      <input 
-                        required 
-                        type="text" 
-                        name="address"
-                        value={orderDetails.address}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
-                        placeholder="Calle 10 # 20-30 Apto 101"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Notas Adicionales (Opcional)</label>
-                      <textarea 
-                        name="notes"
-                        value={orderDetails.notes}
-                        onChange={handleInputChange}
-                        rows={2}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border"
-                        placeholder="Ej. Dejar en portería, sin timbre..."
-                      />
-                    </div>
+                    <input required type="text" name="customerName" value={orderDetails.customerName} onChange={handleInputChange} className="w-full rounded-md border-gray-300 p-2 border sm:text-sm" placeholder="Nombre Completo" />
+                    <input required type="tel" name="phone" value={orderDetails.phone} onChange={handleInputChange} className="w-full rounded-md border-gray-300 p-2 border sm:text-sm" placeholder="Teléfono / WhatsApp" />
+                    <input required type="text" name="neighborhood" value={orderDetails.neighborhood} onChange={handleInputChange} className="w-full rounded-md border-gray-300 p-2 border sm:text-sm" placeholder="Barrio (Medellín)" />
+                    <input required type="text" name="address" value={orderDetails.address} onChange={handleInputChange} className="w-full rounded-md border-gray-300 p-2 border sm:text-sm" placeholder="Dirección Exacta" />
+                    <textarea name="notes" value={orderDetails.notes} onChange={handleInputChange} rows={2} className="w-full rounded-md border-gray-300 p-2 border sm:text-sm" placeholder="Notas Adicionales (Opcional)" />
                   </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">Método de Pago</h3>
                   <div className="space-y-2">
-                    <label className="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value="efectivo" 
-                        checked={orderDetails.paymentMethod === 'efectivo'}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-brand-red focus:ring-brand-red" 
-                      />
-                      <span className="flex-1 flex items-center">
-                        <i className="fas fa-money-bill-wave text-green-600 mr-2"></i> Efectivo contra entrega
-                      </span>
+                    <label className="flex items-center space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                      <input type="radio" name="paymentMethod" value="efectivo" checked={orderDetails.paymentMethod === 'efectivo'} onChange={handleInputChange} className="h-4 w-4 text-brand-red" />
+                      <span className="flex-1 text-sm font-medium">Efectivo contra entrega</span>
                     </label>
-                    <label className="flex items-center space-x-3 p-2 border rounded border-brand-red/30 cursor-pointer hover:bg-brand-red/5">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value="nequi" 
-                        checked={orderDetails.paymentMethod === 'nequi'}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-brand-red focus:ring-brand-red" 
-                      />
+                    <label className="flex items-center space-x-3 p-3 border rounded border-brand-red/20 cursor-pointer hover:bg-brand-red/5">
+                      <input type="radio" name="paymentMethod" value="nequi" checked={orderDetails.paymentMethod === 'nequi'} onChange={handleInputChange} className="h-4 w-4 text-brand-red" />
                       <span className="flex-1 flex flex-col">
-                        <span className="font-bold text-purple-800 flex items-center">
-                          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Logo_Nequi.svg/1200px-Logo_Nequi.svg.png" className="h-4 mr-2" alt="Nequi" />
-                          Nequi / Daviplata
-                        </span>
-                        <span className="text-xs text-gray-500">Paga ahora y adjunta el comprobante</span>
+                        <span className="font-bold text-purple-800">Nequi / Daviplata</span>
+                        <span className="text-xs text-gray-500">Paga ahora y envía el comprobante</span>
                       </span>
                     </label>
-                    <label className="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value="transferencia" 
-                        checked={orderDetails.paymentMethod === 'transferencia'}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-brand-red focus:ring-brand-red" 
-                      />
-                      <span className="flex-1 flex items-center">
-                        <i className="fas fa-university text-blue-600 mr-2"></i> Transferencia Bancaria
-                      </span>
+                    <label className="flex items-center space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                      <input type="radio" name="paymentMethod" value="transferencia" checked={orderDetails.paymentMethod === 'transferencia'} onChange={handleInputChange} className="h-4 w-4 text-brand-red" />
+                      <span className="flex-1 text-sm font-medium">Transferencia Bancaria</span>
                     </label>
                   </div>
                 </div>
               </form>
             )}
 
-            {/* Step 3: Success */}
             {step === 'success' && (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                  <i className="fab fa-whatsapp text-5xl text-green-600"></i>
+              <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                  <i className="fab fa-whatsapp text-4xl text-green-600"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Casi listo!</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-2xl font-bold text-gray-800 mb-1">¡Casi listo!</h3>
+                <p className="text-gray-500 text-sm mb-6">
                   Hemos generado tu orden <strong>#{orderId}</strong>. <br/>
                   Se ha abierto WhatsApp automáticamente.
                 </p>
 
-                {/* Bloque especial para Nequi */}
                 {orderDetails.paymentMethod === 'nequi' && (
-                  <div className="bg-purple-50 border-2 border-purple-200 p-4 rounded-xl mb-6 w-full text-left">
-                    <h4 className="text-purple-900 font-bold flex items-center mb-2">
-                      <i className="fas fa-info-circle mr-2"></i> Instrucciones Nequi:
+                  <div className="bg-purple-50 border border-purple-200 p-5 rounded-xl mb-6 w-full text-left">
+                    <h4 className="text-purple-900 font-bold flex items-center mb-3">
+                      <i className="fas fa-info-circle mr-2"></i> Instrucciones de Pago:
                     </h4>
-                    <p className="text-sm text-purple-800 mb-3">
-                      1. Realiza el pago de <strong>${total.toLocaleString('es-CO')}</strong> al número:<br/>
-                      <span className="text-lg font-black block mt-1">{NEQUI_NUMBER}</span>
+                    <p className="text-sm text-purple-800 mb-4">
+                      Realiza el pago de <strong className="text-lg text-purple-900">${finalTotal.toLocaleString('es-CO')}</strong> al número Nequi:
+                      <span className="text-2xl font-black block mt-1 tracking-wider text-center py-2 bg-white rounded-lg border border-purple-100 shadow-sm">{NEQUI_NUMBER}</span>
                     </p>
-                    <p className="text-xs text-purple-700 font-medium">
-                      2. Toma un pantallazo del comprobante.<br/>
-                      3. <strong>Envíalo al chat de WhatsApp</strong> que acabamos de abrir.
-                    </p>
+                    <div className="space-y-1 text-xs text-purple-700">
+                      <p>• Toma un pantallazo del comprobante.</p>
+                      <p>• <strong>Envíalo al chat de WhatsApp</strong> que abrimos.</p>
+                    </div>
                   </div>
                 )}
 
-                <div className="bg-white p-4 rounded border w-full text-left mb-6 text-sm shadow-inner">
-                  <p className="text-center text-gray-500 italic mb-2">Resumen enviado:</p>
-                  <p><strong>Cliente:</strong> {orderDetails.customerName}</p>
-                  <p><strong>Total:</strong> ${total.toLocaleString('es-CO')}</p>
-                  <p><strong>Pago:</strong> {orderDetails.paymentMethod.toUpperCase()}</p>
+                <div className="bg-white p-4 rounded border w-full text-left mb-6 text-sm shadow-inner space-y-1">
+                  <p className="text-center text-gray-400 italic mb-2">Resumen del pedido:</p>
+                  <p><strong>Cliente:</strong> <span className="text-gray-700 capitalize">{orderDetails.customerName}</span></p>
+                  <p><strong>Total:</strong> <span className="text-brand-red font-bold">${finalTotal.toLocaleString('es-CO')}</span></p>
+                  <p><strong>Pago:</strong> <span className="uppercase text-gray-700">{orderDetails.paymentMethod}</span></p>
                 </div>
                 
                 <button 
                   onClick={() => { setStep('cart'); onClose(); }}
-                  className="bg-brand-red text-white font-bold py-3 px-8 rounded-lg w-full"
+                  className="bg-brand-red text-white font-bold py-3 px-8 rounded-xl w-full shadow-lg"
                 >
                   Entendido, volver al inicio
                 </button>
@@ -334,35 +233,23 @@ const CartModal: React.FC<CartModalProps> = ({
             )}
           </div>
 
-          {/* Footer Actions */}
-          {step !== 'success' && cart.length > 0 && (
+          {step !== 'success' && (currentTotal > 0 || step === 'checkout') && (
             <div className="border-t border-gray-200 bg-white p-4 sm:px-6">
-              <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
-                <p>Subtotal</p>
-                <p>${total.toLocaleString('es-CO')}</p>
+              <div className="flex justify-between text-lg font-bold text-gray-900 mb-4">
+                <p>Total</p>
+                <p>${currentTotal.toLocaleString('es-CO')}</p>
               </div>
               {step === 'cart' ? (
-                <button
-                  onClick={() => setStep('checkout')}
-                  className="flex w-full items-center justify-center rounded-md border border-transparent bg-brand-green px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700"
-                >
+                <button onClick={() => setStep('checkout')} className="w-full rounded-xl bg-brand-green px-6 py-4 text-base font-bold text-white shadow-lg hover:bg-green-700 transition-colors">
                   Continuar al Pago
                 </button>
               ) : (
                 <div className="flex space-x-3">
-                   <button
-                    type="button"
-                    onClick={() => setStep('cart')}
-                    className="flex-1 items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                  >
+                   <button type="button" onClick={() => setStep('cart')} className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-4 text-base font-medium text-gray-700">
                     Volver
                   </button>
-                  <button
-                    type="submit"
-                    form="checkout-form"
-                    className="flex-1 items-center justify-center rounded-md border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700"
-                  >
-                    <i className="fab fa-whatsapp mr-2"></i> Confirmar Pedido
+                  <button type="submit" form="checkout-form" className="flex-1 rounded-xl bg-green-600 px-4 py-4 text-base font-bold text-white shadow-lg flex items-center justify-center">
+                    <i className="fab fa-whatsapp mr-2 text-xl"></i> Confirmar
                   </button>
                 </div>
               )}
